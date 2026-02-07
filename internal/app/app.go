@@ -56,6 +56,11 @@ func (a *App) Start(ctx context.Context) error {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			_ = json.NewEncoder(w).Encode(metaReg.Entities())
 		})
+		r.Get("/meta/modules", func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			_ = json.NewEncoder(w).Encode(metaReg.Modules())
+		})
+
 
 		specs := []modules.Spec{
 			{Module: ping.New(), WithStore: false},
@@ -77,6 +82,10 @@ func (a *App) Start(ctx context.Context) error {
 			if err := m.Register(setup); err != nil {
 				panic(fmt.Errorf("module %s register: %w", m.Name(), err))
 			}
+			metaReg.AddModule(meta.Module{
+				Name:      m.Name(),
+				WithStore: spec.WithStore,
+			})
 		}
 	}
 
