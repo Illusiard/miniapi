@@ -17,7 +17,7 @@ type Server struct {
 
 type ReadyFn func(ctx context.Context) error
 
-func New(addr string, ready ReadyFn) *Server {
+func New(addr string, ready ReadyFn, register func(r chi.Router)) *Server {
 	r := chi.NewRouter()
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -45,6 +45,10 @@ func New(addr string, ready ReadyFn) *Server {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ready"}`))
 	})
+
+	if register != nil {
+		register(r)
+	}
 
 	s := &http.Server{
 		Addr:              addr,
