@@ -63,7 +63,12 @@ func (a *App) Start(ctx context.Context) error {
 
 
 		specs := []modules.Spec{
-			{Module: ping.New(), WithStore: false},
+			{
+				Module:      ping.New(),
+				WithStore:   false,
+				Description: "Demo module: /ping endpoint + publishes Ping entity metadata.",
+				Version:     "0.1.0",
+			},
 		}
 
 		for _, spec := range specs {
@@ -83,8 +88,10 @@ func (a *App) Start(ctx context.Context) error {
 				panic(fmt.Errorf("module %s register: %w", m.Name(), err))
 			}
 			metaReg.AddModule(meta.Module{
-				Name:      m.Name(),
-				WithStore: spec.WithStore,
+				Name:        m.Name(),
+				WithStore:   spec.WithStore,
+				Description: spec.Description,
+				Version:     spec.Version,
 			})
 		}
 	}

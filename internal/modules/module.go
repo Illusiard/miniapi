@@ -8,6 +8,8 @@ type Module interface {
 }
 
 type Spec struct {
-	Module    Module
-	WithStore bool
+	Module      Module
+	WithStore   bool
+	Description string
+	Version     string
 }

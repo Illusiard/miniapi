@@ -74,6 +74,23 @@
 
 Это позволяет подключаться к внешней базе данных
 
+## Modules
+
+Модули компилируются (Go packages), но загружаются через capability-based setup.
+Модуль получает только необходимое:
+- Routes (регистрация HTTP запросов)
+- Meta (публикация мета-данных сущностей/модулей)
+- Store (опционально DB access)
+
+### Built-in modules
+
+- **ping** (`v0.1.0`)
+  - Description: Демо модуль: endpoint `/ping` + мета-данные Ping.
+  - Endpoints:
+    - `GET /ping` (or `/ping/`) — возвращает `pong` с timestamp.
+  - Publishes entity:
+    - `Ping` (демо сущность, без таблицы и данных)
+
 ## Endpoints
 
 * `GET /health` — жив ли серверв вообще
