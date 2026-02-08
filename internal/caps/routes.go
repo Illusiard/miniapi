@@ -10,6 +10,8 @@ type Routes interface {
 	Route(pattern string, fn func(r Routes))
 	Get(pattern string, h http.HandlerFunc)
 	Post(pattern string, h http.HandlerFunc)
+
+	Chi() chi.Router
 }
 
 type chiRoutes struct {
@@ -32,4 +34,8 @@ func (c *chiRoutes) Get(pattern string, h http.HandlerFunc) {
 
 func (c *chiRoutes) Post(pattern string, h http.HandlerFunc) {
 	c.r.Post(pattern, h)
+}
+
+func (c *chiRoutes) Chi() chi.Router {
+	return c.r
 }

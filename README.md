@@ -91,6 +91,18 @@
   - Publishes entity:
     - `Ping` (демо сущность, без таблицы и данных)
 
+- **notes** (`v0.1.0`)
+  - Description: Example CRUDL модуль с хранением в PostgreSQL (`notes` table).
+  - Endpoints:
+    - `GET /notes` — list notes (max 100)
+    - `GET /notes/{id}` — get note
+    - `POST /notes` — create note `{ "title": "...", "content": "..." }`
+    - `PUT /notes/{id}` — update note `{ "title": "...", "content": "..." }`
+    - `DELETE /notes/{id}` — delete note
+  - Publishes entity:
+    - `Note` (table `notes`)
+
+
 ## Endpoints
 
 * `GET /health` — жив ли серверв вообще

@@ -16,8 +16,10 @@ import (
 	"github.com/Illusiard/miniapi/internal/db"
 	"github.com/Illusiard/miniapi/internal/httpserver"
 	"github.com/Illusiard/miniapi/internal/meta"
+	"github.com/Illusiard/miniapi/internal/migrations"
 	"github.com/Illusiard/miniapi/internal/modules"
 	"github.com/Illusiard/miniapi/internal/store"
+	"github.com/Illusiard/miniapi/modules/notes"
 	"github.com/Illusiard/miniapi/modules/ping"
 )
 
@@ -43,6 +45,14 @@ func (a *App) Start(ctx context.Context) error {
 	}
 	a.db = pool
 
+	if a.cfg.AutoMigrate {
+		slog.Info("auto-migrate enabled", "path", a.cfg.MigrationsPath)
+		r := migrations.New(a.cfg.MigrationsPath, a.cfg.DatabaseURL)
+		if err := r.Up(); err != nil {
+			return fmt.Errorf("auto-migrate: %w", err)
+		}
+	}
+
 	pgStore := store.New(a.db)
 
 	readyFn := func(ctx context.Context) error {
@@ -67,6 +77,12 @@ func (a *App) Start(ctx context.Context) error {
 				Module:      ping.New(),
 				WithStore:   false,
 				Description: "Demo module: /ping endpoint + publishes Ping entity metadata.",
+				Version:     "0.1.0",
+			},
+			{
+				Module:      notes.New(),
+				WithStore:   true,
+				Description: "Example CRUD module backed by PostgreSQL (notes table).",
 				Version:     "0.1.0",
 			},
 		}

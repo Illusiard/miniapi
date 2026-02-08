@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 	"net/url"
+	"path/filepath"
+	"strconv"
 )
 
 type Config struct {
@@ -13,9 +15,12 @@ type Config struct {
 	LogLevel slog.Level
 
 	DatabaseURL string
+	AutoMigrate bool
+
+	MigrationsPath string
 }
 
-func buildDatabaseURL(user string, pass string, host string, port string, name string) string {
+func buildDatabaseURL(user string, pass string, host string, port string, name string, sslmode string) string {
 	u := &url.URL{
 		Scheme: "postgres",
 		User:   url.UserPassword(user, pass),
@@ -23,12 +28,17 @@ func buildDatabaseURL(user string, pass string, host string, port string, name s
 		Path:  "/" + name,
 	}
 	q := u.Query()
-	q.Set("sslmode", "disable")
+	q.Set("sslmode", sslmode)
 	u.RawQuery = q.Encode()
 	return u.String()
 }
 
 func Load() (Config, error) {
+	sslmodeRaw := getEnv("DB_SSLMODE", "disable")
+	sslmode, err := normalizeSSLMode(sslmodeRaw)
+	if err != nil {
+		return Config{}, err
+	}
 	cfg := Config{
 		HTTPAddr: getEnv("HTTP_ADDR", ":8080"),
 		LogLevel: parseLogLevel(getEnv("LOG_LEVEL", "info")),
@@ -38,7 +48,10 @@ func Load() (Config, error) {
 			getEnv("DB_HOST", "db"),
 			getEnv("DB_PORT", "5432"),
 			getEnv("DB_NAME", "miniapi"),
+                        sslmode,
 		),
+		AutoMigrate: parseBool(getEnv("AUTO_MIGRATE", "0")),
+		MigrationsPath: getEnv("MIGRATIONS_PATH", defaultMigrationsPath()),
 	}
 
 	if strings.TrimSpace(cfg.HTTPAddr) == "" {
@@ -49,6 +62,14 @@ func Load() (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+
+func defaultMigrationsPath() string {
+	if _, err := os.Stat("/app/migrations"); err == nil {
+		return "/app/migrations"
+	}
+	return filepath.Clean("./migrations")
 }
 
 func getEnv(key string, def string) string {
@@ -70,4 +91,40 @@ func parseLogLevel(v string) slog.Level {
 	default:
 		return slog.LevelInfo
 	}
+}
+
+func normalizeSSLMode(v string) (string, error) {
+	v = strings.ToLower(strings.TrimSpace(v))
+	if v == "" {
+		return "disable", nil
+	}
+
+	allowed := map[string]bool{
+		"disable":     true,
+		"allow":       true,
+		"prefer":      true,
+		"require":     true,
+		"verify-ca":   true,
+		"verify-full": true,
+	}
+
+	if !allowed[v] {
+		return "", fmt.Errorf("invalid DB_SSLMODE=%q; allowed one of disable|allow|prefer|require|verify-ca|verify-full", v)
+	}
+
+	return v, nil
+}
+
+func parseBool(v string) bool {
+	v = strings.TrimSpace(strings.ToLower(v))
+	if v == "" {
+		return false
+	}
+	if v == "1" || v == "true" || v == "yes" || v == "y" || v == "on" {
+		return true
+	}
+	if i, err := strconv.Atoi(v); err == nil {
+		return i != 0
+	}
+	return false
 }
