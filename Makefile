@@ -44,6 +44,10 @@ help:
 	@echo " d-migrate-down    - down 1 migrate"
 	@echo " d-migrate-force   - force migrate"
 	@echo " d-migrate-version - version"
+	@echo ""
+	@echo "Tests:"
+	@echo " test-unit          - run UNIT tests"
+	@echo " test-integration   - run integration tests"
 
 .PHONY: check-env
 check-env:
@@ -122,3 +126,11 @@ d-migrate-version: check-env
 d-migrate-force: check-env
 	@if [ -z "$(V)" ]; then echo "Usage: make d-migrate-force V=<version>"; exit 1; fi
 	$(DCM) force $(V)
+
+.PHONY: test-unit test-integration
+test-unit:
+	go test ./...
+
+test-integration:
+	go test -tags=integration ./...
+

@@ -35,7 +35,7 @@ func buildDatabaseURL(user string, pass string, host string, port string, name s
 
 func Load() (Config, error) {
 	sslmodeRaw := getEnv("DB_SSLMODE", "disable")
-	sslmode, err := normalizeSSLMode(sslmodeRaw)
+	sslmode, err := validateSSLMode(sslmodeRaw)
 	if err != nil {
 		return Config{}, err
 	}
@@ -93,26 +93,18 @@ func parseLogLevel(v string) slog.Level {
 	}
 }
 
-func normalizeSSLMode(v string) (string, error) {
+func validateSSLMode(v string) (string, error) {
 	v = strings.ToLower(strings.TrimSpace(v))
 	if v == "" {
-		return "disable", nil
+		return "", fmt.Errorf("DB_SSLMODE must not be empty")
 	}
 
-	allowed := map[string]bool{
-		"disable":     true,
-		"allow":       true,
-		"prefer":      true,
-		"require":     true,
-		"verify-ca":   true,
-		"verify-full": true,
+	switch v {
+	case "disable", "allow", "prefer", "require", "verify-ca", "verify-full":
+		return v, nil
+	default:
+		return "", fmt.Errorf("invalid DB_SSLMODE=%q; allowed: disable|allow|prefer|require|verify-ca|verify-full", v)
 	}
-
-	if !allowed[v] {
-		return "", fmt.Errorf("invalid DB_SSLMODE=%q; allowed one of disable|allow|prefer|require|verify-ca|verify-full", v)
-	}
-
-	return v, nil
 }
 
 func parseBool(v string) bool {
