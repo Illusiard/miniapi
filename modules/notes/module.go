@@ -55,9 +55,7 @@ func (m *Module) Register(s caps.Setup) error {
 		},
 	})
 
-	router := s.Routes.Chi()
-
-	router.Route("/notes", func(r chi.Router) {
+	s.Routes.Route("/notes", func(r caps.Routes) {
 		r.Get("/", func(w http.ResponseWriter, req *http.Request) {
 			notes, err := listNotes(req.Context(), s)
 			if err != nil {
